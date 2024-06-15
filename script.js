@@ -9,35 +9,70 @@ function validatePAN(pan) {
 }
 
 function numberToWords(num) {
-    const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
-    const teens = ["", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const tens = ["", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-    const thousands = ["", "Thousand", "Lakh", "Crore"];
+    // Arrays for number words
+    const belowTwenty = [
+        "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", 
+        "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"
+    ];
+    const tens = [
+        "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+    ];
+    const aboveThousand = [
+        "", "Thousand", "Lakh", "Crore"
+    ];
 
     if (num === 0) return "Zero";
 
+    
+    let numStr = num.toString();
+    let numLength = numStr.length;
     let words = "";
 
-    const getWords = (n, idx) => {
-        if (n > 0) {
-            if (n < 10) words += units[n] + " ";
-            else if (n < 20) words += teens[n - 10] + " ";
-            else {
-                words += tens[Math.floor(n / 10)] + " ";
-                words += units[n % 10] + " ";
-            }
-            words += thousands[idx] + " ";
+    function getHundredPart(n) {
+        let result = "";
+        let hundreds = Math.floor(n / 100);  
+        let remainder = n % 100; 
+
+       
+        if (hundreds > 0) {
+            result += belowTwenty[hundreds] + " Hundred ";
+            if (remainder > 0) result += "and "; 
         }
-    };
 
-    const digits = num.toString().split("").reverse().map(Number);
-    getWords(digits[1] * 10 + digits[0], 0); // units and tens
-    getWords(digits[3] * 10 + digits[2], 1); // hundreds and thousands
-    getWords(digits[5] * 10 + digits[4], 2); // ten thousands and lakhs
-    getWords(digits[7] * 10 + digits[6], 3); // crores
+       
+        if (remainder < 20) {
+            result += belowTwenty[remainder];  
+        } else {
+            result += tens[Math.floor(remainder / 10)];  
+            if (remainder % 10 > 0) result += " " + belowTwenty[remainder % 10];  
+        }
+        return result;
+    }
 
-    return words.trim() + " Rs.";
+    let groupCount = 0;  
+    while (numStr.length > 0) {
+        let groupValue;
+   
+        if (groupCount === 0) {
+            groupValue = numStr.slice(-3);  
+            numStr = numStr.slice(0, -3);  
+        } else {
+            
+            groupValue = numStr.slice(-2); 
+            numStr = numStr.slice(0, -2);  
+        }
+
+        
+        if (parseInt(groupValue, 10) > 0) {
+            words = getHundredPart(parseInt(groupValue, 10)) + " " + aboveThousand[groupCount] + " " + words;
+        }
+
+        groupCount++; 
+    }
+
+    return words.trim();  
 }
+
 
 document.getElementById('loanForm').addEventListener('submit', function (event) {
     event.preventDefault();
